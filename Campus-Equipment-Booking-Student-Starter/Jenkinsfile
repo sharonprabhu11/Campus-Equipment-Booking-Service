@@ -2,15 +2,6 @@
 pipeline {
     agent any
 
-    tools {
-        jdk 'JDK17'
-        maven 'Maven3'
-    }
-
-    options {
-        timestamps()
-    }
-
     stages {
         stage('Checkout') {
             steps {
@@ -18,41 +9,35 @@ pipeline {
             }
         }
 
-        stage('Verify Tools') {
+        stage('Check Tools') {
             steps {
-                bat 'java -version'
-                bat 'mvn -version'
-                bat 'git --version'
+                sh 'java -version'
+                sh 'mvn -version'
+                sh 'git --version'
             }
         }
 
         stage('Test') {
             steps {
-                bat 'mvn clean test'
-            }
-            post {
-                always {
-                    junit testResults: 'target/surefire-reports/*.xml',
-                          allowEmptyResults: true
-                }
+                sh 'mvn clean test'
             }
         }
 
         stage('Package') {
             steps {
-                bat 'mvn clean package'
-                archiveArtifacts artifacts: 'target/*.jar',
-                                 fingerprint: true
+                sh 'mvn clean package'
             }
         }
     }
 
     post {
-        success {
-            echo 'Build, tests and packaging completed successfully.'
+        always {
+            junit testResults: 'target/surefire-reports/*.xml',
+                  allowEmptyResults: true
         }
-        failure {
-            echo 'Pipeline failed. Inspect the console output.'
+        success {
+            archiveArtifacts artifacts: 'target/*.jar',
+                             fingerprint: true
         }
     }
 }

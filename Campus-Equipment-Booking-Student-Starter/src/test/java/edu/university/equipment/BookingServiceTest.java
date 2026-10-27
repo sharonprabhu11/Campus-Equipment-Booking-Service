@@ -51,4 +51,18 @@ class BookingServiceTest {
             .getAvailableQuantity()
     );
 }
+
+@Test
+void negativeQuantityRejected() {
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> service.create("STU1001", "LAPTOP01", -1)
+    );
+
+    assertEquals(
+        10,
+        service.getEquipment("LAPTOP01").getAvailableQuantity()
+    );
+}
+
 }
