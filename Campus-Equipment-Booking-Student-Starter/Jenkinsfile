@@ -1,0 +1,58 @@
+
+pipeline {
+    agent any
+
+    tools {
+        jdk 'JDK17'
+        maven 'Maven3'
+    }
+
+    options {
+        timestamps()
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Verify Tools') {
+            steps {
+                bat 'java -version'
+                bat 'mvn -version'
+                bat 'git --version'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                bat 'mvn clean test'
+            }
+            post {
+                always {
+                    junit testResults: 'target/surefire-reports/*.xml',
+                          allowEmptyResults: true
+                }
+            }
+        }
+
+        stage('Package') {
+            steps {
+                bat 'mvn clean package'
+                archiveArtifacts artifacts: 'target/*.jar',
+                                 fingerprint: true
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Build, tests and packaging completed successfully.'
+        }
+        failure {
+            echo 'Pipeline failed. Inspect the console output.'
+        }
+    }
+}
