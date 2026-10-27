@@ -1,0 +1,43 @@
+
+pipeline {
+    agent any
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Check Tools') {
+            steps {
+                sh 'java -version'
+                sh 'mvn -version'
+                sh 'git --version'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                sh 'mvn clean test'
+            }
+        }
+
+        stage('Package') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+    }
+
+    post {
+        always {
+            junit testResults: 'target/surefire-reports/*.xml',
+                  allowEmptyResults: true
+        }
+        success {
+            archiveArtifacts artifacts: 'target/*.jar',
+                             fingerprint: true
+        }
+    }
+}
